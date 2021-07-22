@@ -1,0 +1,5 @@
+graft synonymdetection/models
+recursive-include synonymdetection/corpora *.txt
+graft synonymdetection/datasets
+global-exclude *.DS_Store
+
