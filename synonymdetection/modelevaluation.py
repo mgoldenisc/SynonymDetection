@@ -1,6 +1,5 @@
 import csv
-from iksimilarity import IKFastTextTools as IKST
-from iksimilarityw2v import IKWord2VecTools as IKW2V
+from iksimilarity import IKFastTextTools as IKST, IKWord2VecTools as IKW2V
 import os
 
 """ This script will run through 1 or more saved models and evaluate their performance.
@@ -20,8 +19,17 @@ import os
     fastText and Word2Vec models. As such, it makes some assumptions: if a model name contains 'w2v' (in some form), 
     it will treat the model as a Word2Vec model, otherwise it will treat it as fastText. 
 
-    To be tested, the model must have vectors saved in the models/keyed_vectors directory. If the models 
-    being tested were created through the iksimilarity module, this is where models are stored.
+    To be tested, the model must have vectors saved in the models/word2vec/keyed_vectors directory (for Word2Vec models) or
+    in the models/fasttext directory (for fastText models). If the models being tested were created through the iksimilarity
+    module, this is where models of each type are stored.
+
+    The datasets included are cited below.
+
+    SimLex-999 (SimLex-999: Evaluating Semantic Models with (Genuine) Similarity Estimation. 2014. Felix Hill, Roi Reichart and Anna Korhonen.)
+    MTURK-771 (Guy Halawi, Gideon Dror, Evgeniy Gabrilovich, Yehuda Koren: Large-scale learning of word relatedness with constraints. KDD 2012: 1406-1414)
+    wordsim353 (Eneko Agirre, Enrique Alfonseca, Keith Hall, Jana Kravalova, Marius Pasca, Aitor Soroa, A Study on Similarity and Relatedness Using Distributional and WordNet-based Approaches, In Proceedings of NAACL-HLT 2009.)
+    Stanford Rare Words Dataset (Luong, Minh-Thang  and  Socher, Richard and Manning, Christopher D. Better Word Representations with Recursive Neural Networks for Morphology. 2013)
+    MEN Test Collection (Multimodal Distributional Semantics E. Bruni, N. K. Tran and M. Baroni. Journal of Artificial Intelligence Research 49: 1-47.)
 
     Output
     -----------
@@ -33,14 +41,17 @@ import os
 
 def main():
     print("Current models available for evaluation:\n")
-    for folder in os.listdir('models/keyed_vectors'):
+    for folder in os.listdir('models/word2vec/keyed_vectors'):
+        if not folder.startswith('.'):
+            print(folder)
+    for folder in os.listdir('models/fasttext'):
         if not folder.startswith('.'):
             print(folder)
     models = input("\nInput one of the above model names, or multiple names separated by commas. For all, enter 'a': ").split(',')
     if models[0] == 'a':
-        models = os.listdir('models/keyed_vectors')
+        models = os.listdir('models/word2vec/keyed_vectors')
     for model_name in models:
-        if model_name.startswith('.'): # If using all models, ignore hidden files in the dir
+        if model_name.startswith('.') or model_name.endswith('.txt'): # If using all models, ignore hidden files in the dir and ignore txt files
             continue
         model_name = model_name.strip()
         if 'w2v' in model_name.lower():
