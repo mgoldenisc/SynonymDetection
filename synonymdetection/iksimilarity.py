@@ -239,12 +239,7 @@ class IKFastTextTools(IKSimilarityTools):
 
     __PATH_PREFIX__ = os.path.join('models', 'fasttext')
 
-    def __init__(self, pmodel_name, installdir=''): 
-
-        # installdir will be for calls from within IRIS and is {IRISINSTALLDIR}/mgr/python/synonymdetection. IRIS
-        # Python runtime doesn't handle relative paths well currently. 
-        # Otherwise, __PATH_PREFIX__ alone is sufficient.
-        if installdir != '': self.__PATH_PREFIX__ = installdir + self.__PATH_PREFIX__
+    def __init__(self, pmodel_name): 
 
         self.load_vectors(pmodel_name)
 
@@ -300,15 +295,10 @@ class IKWord2VecTools(IKSimilarityTools):
         Get a dictionary of synonyms, where each key is a term in the source_text FILE and each
         entry is the top num_similar most similar words to that key in the model. 
     """
-    __PATH_PREFIX__ = os.path.join('models', 'word2vec', 'vectors')
+    __PATH_PREFIX__ = os.path.join(os.path.dirname(__file__),'models', 'word2vec', 'vectors')
 
-    def __init__(self, pmodel_name, installdir=''):
+    def __init__(self, pmodel_name):
         
-        # installdir will be for calls from within IRIS and is {IRISINSTALLDIR}/mgr/python/synonymdetection. IRIS
-        # Python runtime doesn't handle relative paths well currently. 
-        # Otherwise, __PATH_PREFIX__ alone is sufficient.
-        if installdir != '': self.__PATH_PREFIX__ = installdir + self.__PATH_PREFIX__
-
         self.load_vectors(pmodel_name)
 
         self.model_name = pmodel_name # Keeps track of what model is at use
@@ -384,26 +374,24 @@ class IKFastTextModeling(IKSimilarityModeling):
         Contains methods to train (create new) and retrain (update existing) models.
 
         Methods (class methods):
-        create_new_model(cls, corpus_path, pmodel_name, epochs=5, pmin_count=10, psize=150, installdir=''):
+        create_new_model(cls, corpus_path, pmodel_name, epochs=5, pmin_count=10, psize=150):
         Creates a new model pmodel_name, trained on corpus found at corpus_path. Makes epochs number of passes
         over the corpus. Words in the corpus must appear pmin_count times to be considered. Vectors will be of 
-        dimension psize. installdir is passed from IRIS Python Runtime to aid Python in locating relevant directories
-        of the module on an IRIS instance.
+        dimension psize.
 
-        update_model(cls, corpus_path, pmodel_name, use_iknow_entities=True, tokenize_concepts=True, installdir=''):
+        update_model(cls, corpus_path, pmodel_name, use_iknow_entities=True, tokenize_concepts=True):
         Updates the model pmodel_name, training on corpus found at corpus_path. If use_iknow_entities, will use 
         iKnow entities in training. If tokenize_concepts, will turn iKnow entities into singular tokens, joined by underscores
-        (_). installdir is passed from IRIS Python Runtime to aid Python in locating relevant directories
-        of the module on an IRIS instance.
+        (_).
 
         NOTE: Update is currently non-functional.
     """
 
-    __PATH_PREFIX__ = os.path.join('models', 'fasttext')
+    __PATH_PREFIX__ = os.path.join(os.path.dirname(__file__),'models', 'fasttext')
 
 
     @classmethod
-    def create_new_model(cls, corpus_path, pmodel_name, epochs=5, pmin_count=10, psize=150, installdir=''):
+    def create_new_model(cls, corpus_path, pmodel_name, epochs=5, pmin_count=10, psize=150):
         """ Creates and trains (and optionally saves) a model using gensim's implementation 
         of the fastText algorithm, and then loads the KeyedVectors associated with that model.
         
@@ -433,25 +421,23 @@ class IKFastTextModeling(IKSimilarityModeling):
         RuntimeError - If training an already existing model that makes it past first if statement. This
         is because build_vocab raises RuntimeError if building existing vocab without update=True (see update_model)
         """
-        if installdir != '':
-            model_path = installdir + IKFastTextModeling.__PATH_PREFIX__
 
         if pmodel_name[-4:] != '.bin':
                 pmodel_name = pmodel_name + '.bin'
 
-        if os.path.exists(os.path.join(model_path, pmodel_name)):
+        if os.path.exists(os.path.join(IKFastTextModeling.__PATH_PREFIX__, pmodel_name)):
             raise FileExistsError("Model named {} already exists, model could not be created".format(pmodel_name[:-4]))
         
         model = ft.FastText(vector_size=psize, sg=1, min_count=pmin_count)
 
         super().create_new_model(corpus_path, model, epochs)
 
-        ft.save_facebook_model(model, path=os.path.join(model_path, pmodel_name))
+        ft.save_facebook_model(model, path=os.path.join(IKFastTextModeling.__PATH_PREFIX__, pmodel_name))
         return True
 
 
     @classmethod
-    def update_model(cls, corpus_path, pmodel_name, use_iknow_entities=True, tokenize_concepts=True, installdir=''):
+    def update_model(cls, corpus_path, pmodel_name, use_iknow_entities=True, tokenize_concepts=True):
         """ Updates an already existing model by continuing its training
         on a new corpus.
 
@@ -471,12 +457,10 @@ class IKFastTextModeling(IKSimilarityModeling):
         FileNotFoundError - if corpus or model not found
         """
 
-        model_path = installdir + IKFastTextModeling.__PATH_PREFIX__
-
         try:
             if pmodel_name[-4:] != '.bin':
                 pmodel_name = pmodel_name + '.bin'
-            path = os.path.join(model_path, pmodel_name)
+            path = os.path.join(IKFastTextModeling.__PATH_PREFIX__, pmodel_name)
             model = ft.load_facebook_model(path)
 
             super().update_model(corpus_path, model, use_iknow_entities, tokenize_concepts)
@@ -497,26 +481,24 @@ class IKWord2VecModeling(IKSimilarityModeling):
         Contains methods to train (create new) and retrain (update existing) models.
 
         Methods (class methods):
-        create_new_model(cls, corpus_path, pmodel_name, updateable=True, epochs=5, pmin_count=5, psize=300, installdir=''):
+        create_new_model(cls, corpus_path, pmodel_name, updateable=True, epochs=5, pmin_count=5, psize=300):
         Creates a new model pmodel_name, trained on corpus found at corpus_path. If updateable, will save the entire model
         to be reloaded for continued training (updating) at a later time, otherwise only save vectors. Makes epochs number of passes
         over the corpus. Words in the corpus must appear pmin_count times to be considered. Vectors will be of 
-        dimension psize. installdir is passed from IRIS Python Runtime to aid Python in locating relevant directories
-        of the module on an IRIS instance.
+        dimension psize.
 
-        update_model(cls, corpus_path, pmodel_name, use_iknow_entities=True, tokenize_concepts=True, installdir=''):
+        update_model(cls, corpus_path, pmodel_name, use_iknow_entities=True, tokenize_concepts=True):
         Updates the model pmodel_name, training on corpus found at corpus_path. If use_iknow_entities, will use 
         iKnow entities in training. If tokenize_concepts, will turn iKnow entities into singular tokens, joined by underscores
-        (_). installdir is passed from IRIS Python Runtime to aid Python in locating relevant directories
-        of the module on an IRIS instance.
+        (_).
     """
     
-    __MODEL_PATH_PREFIX__ = os.path.join('models', 'word2vec', 'trained_models')
-    __VECTOR_PATH_PREFIX__ = os.path.join('models', 'word2vec', 'vectors')
+    __MODEL_PATH_PREFIX__ = os.path.join(os.path.dirname(__file__),'models', 'word2vec', 'trained_models')
+    __VECTOR_PATH_PREFIX__ = os.path.join(os.path.dirname(__file__),'models', 'word2vec', 'vectors')
 
     
     @classmethod
-    def create_new_model(cls, corpus_path, pmodel_name, updateable=True, epochs=5, pmin_count=5, psize=150, installdir=''):
+    def create_new_model(cls, corpus_path, pmodel_name, updateable=True, epochs=5, pmin_count=5, psize=150):
         """ Creates and trains (and optionally saves) a model using gensim's implementation 
         of the fastText algorithm, and then loads the KeyedVectors associated with that model.
         
@@ -540,15 +522,12 @@ class IKWord2VecModeling(IKSimilarityModeling):
         RuntimeError - If training an already existing model that makes it past first if statement. This
         is because build_vocab raises RuntimeError if building existing vocab without update=True (see update_model)
         """
-        if installdir != '':
-            model_path = installdir + IKWord2VecModeling.__MODEL_PATH_PREFIX__
-            vector_path = installdir + IKWord2VecModeling.__VECTOR_PATH_PREFIX__
         
         if pmodel_name[-4:] != '.bin':
                 pmodel_name = pmodel_name + '.bin'
 
         # check if same name model exists by checking for vectors because vectors are always saved
-        if os.path.exists(os.path.join(vector_path, pmodel_name)):
+        if os.path.exists(os.path.join(IKWord2VecModeling.__VECTOR_PATH_PREFIX__, pmodel_name)):
             raise FileExistsError("Model named {} already exists, model could not be created".format(pmodel_name[:-4]))
         
         model = Word2Vec(vector_size=psize, sg=1, min_count=pmin_count)
@@ -556,14 +535,14 @@ class IKWord2VecModeling(IKSimilarityModeling):
         super().create_new_model(corpus_path, model, epochs)
 
         if updateable:
-            model.save(os.path.join(model_path, pmodel_name[:-4]))
+            model.save(os.path.join(IKWord2VecModeling.__MODEL_PATH_PREFIX__, pmodel_name[:-4]))
 
-        model.wv.save_word2vec_format(os.path.join(vector_path, pmodel_name), binary=True)
+        model.wv.save_word2vec_format(os.path.join(IKWord2VecModeling.__VECTOR_PATH_PREFIX__, pmodel_name), binary=True)
         return True
 
 
     @classmethod
-    def update_model(cls, corpus_path, pmodel_name, use_iknow_entities=True, tokenize_concepts=True, installdir=''):
+    def update_model(cls, corpus_path, pmodel_name, use_iknow_entities=True, tokenize_concepts=True):
         """ Updates an already existing model by continuing its training
         on a new corpus.
 
@@ -582,23 +561,20 @@ class IKWord2VecModeling(IKSimilarityModeling):
         -----------
         FileNotFoundError - if corpus or model not found
         """
-        if installdir != '':
-            model_path = installdir + IKWord2VecModeling.__MODEL_PATH_PREFIX__
-            vector_path = installdir + IKWord2VecModeling.__VECTOR_PATH_PREFIX__
 
         try:
             if pmodel_name[-4:] != '.bin':
                 pmodel_name = pmodel_name + '.bin'
-            model = Word2Vec.load(os.path.join(model_path, pmodel_name[:-4]))
+            model = Word2Vec.load(os.path.join(IKWord2VecModeling.__MODEL_PATH_PREFIX__, pmodel_name[:-4]))
             
             super().update_model(corpus_path, model, use_iknow_entities, tokenize_concepts)
 
             # Clear current contents of folders storing model and KeyedVectors files as gensim doesn't do it
-            os.remove(os.path.join(model_path, pmodel_name[:-4]))
-            os.remove(os.path.join(vector_path, pmodel_name))
+            os.remove(os.path.join(IKWord2VecModeling.__MODEL_PATH_PREFIX__, pmodel_name[:-4]))
+            os.remove(os.path.join(IKWord2VecModeling.__VECTOR_PATH_PREFIX__, pmodel_name))
             
-            model.save(fname_or_handle=os.path.join(model_path, pmodel_name[:-4]))
-            model.wv.save_word2vec_format(os.path.join(vector_path, pmodel_name), binary=True)
+            model.save(fname_or_handle=os.path.join(IKWord2VecModeling.__MODEL_PATH_PREFIX__, pmodel_name[:-4]))
+            model.wv.save_word2vec_format(os.path.join(IKWord2VecModeling.__VECTOR_PATH_PREFIX__, pmodel_name), binary=True)
             
         except FileNotFoundError as err:
             raise FileNotFoundError("Model could not be updated, check specified corpus and model names") from err
