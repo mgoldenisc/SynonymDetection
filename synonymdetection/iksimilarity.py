@@ -237,7 +237,7 @@ class IKFastTextTools(IKSimilarityTools):
         entry is the top num_similar most similar words to that key in the model. 
     """
 
-    __PATH_PREFIX__ = os.path.join('models', 'fasttext')
+    __PATH_PREFIX__ = os.path.join(os.path.dirname(__file__),'models', 'fasttext')
 
     def __init__(self, pmodel_name): 
 
