@@ -1,7 +1,6 @@
 from gensim.models import fasttext as ft
 from gensim.models.word2vec import Word2Vec
 from gensim.models.keyedvectors import KeyedVectors as KV
-import iknowpy
 import os
 
 
@@ -126,6 +125,7 @@ class IKSimilarityTools(object):
         NOTE: Right now, using iKnow entities will only check for synoyms of the iKnow entities, not for 
         their individual components. So it is one or the other
         """
+        iknowpy = __import__("iknowpy") # not a global import to avoid making user install iknowpy unless they need to use functionality
         dictionary = {}
         if use_iknow_entities:
             # index the source with iknow entities
@@ -178,6 +178,7 @@ class IKSimilarityTools(object):
         NOTE: Right now, using iKnow entities will only check for synoyms of the iKnow entities, not for 
         their individual components. So it is one or the other.
         """
+        iknowpy = __import__("iknowpy") # not a global import to avoid making user install iknowpy unless they need to use functionality
         dictionary = {}
         if use_iknow_entities:
             # index the source with iknow entities
@@ -301,7 +302,7 @@ class IKWord2VecTools(IKSimilarityTools):
     """
     __PATH_PREFIX__ = os.path.join('models', 'word2vec', 'vectors')
 
-    def __init__(self, pmodel_name='IKDefaultModel', installdir=''):
+    def __init__(self, pmodel_name, installdir=''):
         
         # installdir will be for calls from within IRIS and is {IRISINSTALLDIR}/mgr/python/synonymdetection. IRIS
         # Python runtime doesn't handle relative paths well currently. 
@@ -341,6 +342,8 @@ class IKWord2VecTools(IKSimilarityTools):
 
 
 class IKSimilarityModeling():
+
+    import iknowpy
 
     @classmethod
     def create_new_model(cls, corpus_path, model, epochs=5, use_iknow_entities=True, tokenize_concepts=True):
