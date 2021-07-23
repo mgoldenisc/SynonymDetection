@@ -125,9 +125,9 @@ class IKSimilarityTools(object):
         NOTE: Right now, using iKnow entities will only check for synoyms of the iKnow entities, not for 
         their individual components. So it is one or the other
         """
-        iknowpy = __import__("iknowpy") # not a global import to avoid making user install iknowpy unless they need to use functionality
         dictionary = {}
         if use_iknow_entities:
+            iknowpy = __import__("iknowpy") # not a global import to avoid making user install iknowpy unless they need to use functionality
             # index the source with iknow entities
             engine = iknowpy.iKnowEngine()
             engine.index(source_text, 'en')
@@ -178,9 +178,9 @@ class IKSimilarityTools(object):
         NOTE: Right now, using iKnow entities will only check for synoyms of the iKnow entities, not for 
         their individual components. So it is one or the other.
         """
-        iknowpy = __import__("iknowpy") # not a global import to avoid making user install iknowpy unless they need to use functionality
         dictionary = {}
         if use_iknow_entities:
+            iknowpy = __import__("iknowpy") # not a global import to avoid making user install iknowpy unless they need to use functionality
             # index the source with iknow entities
             engine = iknowpy.iKnowEngine()
             for line in open(source_text , 'r'):
@@ -342,8 +342,6 @@ class IKWord2VecTools(IKSimilarityTools):
 
 
 class IKSimilarityModeling():
-
-    import iknowpy
 
     @classmethod
     def create_new_model(cls, corpus_path, model, epochs=5, use_iknow_entities=True, tokenize_concepts=True):
@@ -627,6 +625,7 @@ class SentenceIterator(object):
         self.corpus_path = corpus_path
         self.is_dir = os.path.isdir(corpus_path)
         if use_iknow_entities:
+            iknowpy = __import__("iknowpy") # not a global import to avoid making user install iknowpy unless they need to use functionality
             self.use_iknow_entities = use_iknow_entities
             self.tokenize_concepts = tokenize_concepts
             self.engine = iknowpy.iKnowEngine()
