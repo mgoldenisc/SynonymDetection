@@ -1,10 +1,17 @@
 # Synonym Detection
-This directory contains the first steps toward synonym detection in iKnow, through the use of the word embedding models Word2Vec and fastText. This README contains information on the layout of the synonymdetection directory, important notes before diving in, and a demo at the end!
+This directory contains the first steps toward synonym detection for use in conjunction with iKnow/iFind, through the use of the word embedding models Word2Vec and fastText. This README contains information on the layout of the synonymdetection package, important notes before diving in, and a demo at the end!
+
+## Relation to iKnow
+The use of the synonymdetection package does not require [iKnow](https://github.com/intersystems/iknow) for basic functionality. If a user wishes to train a model using iKnow to tokenize [entities](https://github.com/intersystems/iknow/wiki/Entities), then it is necessary to also install the iknowpy package, available through PyPI:
+
+    pip install iknowpy
+
+If you've already got a model you want to use, or you don't want to tokenize entities for the sake of training, you can forego the installation of the iknowpy package and stick to just the synonymdetection package.
 
 ## File layout
-All of the relevant files reside in iknow/modules/iknowpy/iknowpy/synonymdetection. Inside this synonymdetection folder, you can find:
+The synonymdetection package is laid out as follows:
 
-- corpora (dir): The directory to hold corpora for training models. If you use the iKnow entity preprocessing functionality in the module, it will automatically output the processed corpus here.
+- corpora (dir): The directory to hold corpora for training models. If you use the iKnow entity preprocessing functionality in the module, it will automatically output the processed corpus here. You don't have to place a corpus in this directory to use it for training.
     - examplecorpus.txt: A small corpus used to train the superficial example model included in this repo for exploratory purposes.
 - models (dir): 
     - word2vec (dir):
@@ -13,35 +20,48 @@ All of the relevant files reside in iknow/modules/iknowpy/iknowpy/synonymdetecti
         - trained_models (dir): The directory where trained Word2Vec models are optionally saved to and loaded from. If one wishes to update the model later, it must be saved here (by default, it will be saved), otherwise you can just save and use the vectors.
             - w2v_example: The actual model trained on examplecorpus.txt
     - fasttext (dir): A directory where trained fastText models are automatically saved to and loaded from. Each model is *automatically* saved in "facebook format" as a .bin file which encodes both the vectors and the model. Does not contain an example model as even superficial fastText models are too large.
-- datsets (dir): The directory containing word pair files for use in modelevaluation.py. Also the directry where the output of modelevaluation.py will atuomatically be saved.
+- datasets (dir): The directory containing word pair files for use in modelevaluation.py. Also the directory where the output of modelevaluation.py will atuomatically be saved.
+    - Contains the following datasets:
+        -SimLex-999 (SimLex-999: Evaluating Semantic Models with (Genuine) Similarity Estimation. 2014. Felix Hill, Roi Reichart and Anna Korhonen.)
+        -MTURK-771 (Guy Halawi, Gideon Dror, Evgeniy Gabrilovich, Yehuda Koren: Large-scale learning of word relatedness with constraints. KDD 2012: 1406-1414)
+        -wordsim353 (Eneko Agirre, Enrique Alfonseca, Keith Hall, Jana Kravalova, Marius Pasca, Aitor Soroa, A Study on Similarity and Relatedness Using Distributional and WordNet-based Approaches, In Proceedings of NAACL-HLT 2009.)
+        -Stanford Rare Words Dataset (Luong, Minh-Thang  and  Socher, Richard and Manning, Christopher D. Better Word Representations with Recursive Neural Networks for Morphology. 2013)
+        -MEN Test Collection (Multimodal Distributional Semantics E. Bruni, N. K. Tran and M. Baroni. Journal of Artificial Intelligence Research 49: 1-47.)
 - iksimilarity.py: The main module for synonym support. See the sections "The iksimilarity module" and "An intro demo" for more information.
 - modelevaluation.py: Simple Python script to run a word similarity test on model(s) of your choice. You can choose from a list of models currently saved or run the evaluation on all saved models.
 
+## Installation
+The synonymdetection package is made available through PyPI:
+
+    pip install synonymdetection
+
 ## Notes before diving in
-The synonym detection capabilities are made possible through the implementations of Word2Vec and fastText through the [gensim](https://radimrehurek.com/gensim/) Python library. This library is used for training, saving, loading, updating, and actually using the models/vectors. Luckily, you can install gensim with  pip:
+The synonym detection capabilities are made possible through the implementations of Word2Vec and fastText through the [gensim](https://radimrehurek.com/gensim/) Python library. This library is used for training, saving, loading, updating, and actually using the models/vectors. If you installed synonymdetection with pip, gensim (and its dependencies) should've been installed automatically. If not, you can also install gensim with pip:
 
     pip install gensim
 
-The example model that is contained is only to give an idea of how to load and use models, and of the general file layout. It will not provide good measurements of similarity, so don't worry if you play around and the model tells you the most similar word to 'model' is 'for' or some similar oddity. It's also worth nothing that full fledged models are much more involved than the example Word2Vec model contained within--larger storage size, longer to load into memory for usage, much longer to train etc.
+This document describes the Python package itself, but use of this package through InterSystems IRIS does not require an understanding of the package itself. While reading, remember that the descriptions are meant to explain how to use this package from within Python.
+
+The example model that is contained is only to give an idea of how to load and use models, and of the general file layout. It will not provide good measurements of similarity, so don't worry if you play around and the model tells you the most similar word to 'model' is 'for' or some similar oddity. It's also worth nothing that full fledged models are much more involved than the example Word2Vec model that comes prepackaged in the models directory--larger storage size, longer to load into memory for usage, much longer to train etc.
 
 As a final note, when you get to the retraining portion of the demo, if you follow along your outputted value might be different from mine. Every time a model is trained, even on the same corpus, the vectors will be slightly different because the algorithm will initialize each word to a random vector. Besides, the most important part of the model is the general relationship between vectors.
 
 ## The iksimilarity module
-Class names are subject to change based on what others think fits best. Most of the functionality is contained in the **IKSimilarityTools** class. This is where you'll find methods for retrieving the most similar words to a provided term, a numerical score (cosine similarity) for similarity between two words etc. For actually using this functionality, you should use either **IKFastTextTools** or **IKWord2VecTools**, both of which extend **IKSimilarityTools**. As is expected, the former is for using fastText models and the latter is for using Word2Vec models, with **IKSimilarityTools** containing the bulk of the shared processes for each. 
+Most of the functionality is contained in the **IKSimilarityTools** class. This is where you'll find methods for retrieving the most similar words to a provided term, a numerical score (cosine similarity) for similarity between two words etc. For actually using this functionality, you should use either **IKFastTextTools** or **IKWord2VecTools**, both of which extend **IKSimilarityTools**. As is expected, the former is for using fastText models and the latter is for using Word2Vec models, with **IKSimilarityTools** containing the bulk of the shared processes for each. 
 
-There are two other classes in the module: **IKFastTextModeling** and **IKWord2VecModeling**. These classes contain static methods to create (train) and update (retrain) models. The reasoning behind separating out the training/retraining functionality from the implementation functionality was to allow entire "tools" to be instantiated based on given trained models, where the tools can be used solely for similarity detection purposes. The modeling itself (more behind-the-scenes stuff) could then be handled by the modeling classes through static methods. That's just what felt best to me, but I'm open to rearranging this if people feel it is better another way!
+There are two other classes in the module: **IKFastTextModeling** and **IKWord2VecModeling**. These classes contain static methods to create (train) and update (retrain) models. The reasoning behind separating out the training/retraining functionality from the implementation functionality was to allow entire "tools" to be instantiated based on given trained models, where the tools can be used solely for similarity detection purposes. The modeling itself (more behind-the-scenes stuff) could then be handled by the modeling classes through static methods.
 
-A "guiding principle" in making this module has been to ensure that one can use it without worrying about everything needed for interfacing with gensim. That is, I think in the end, it should be straightforward to use the iksimilarity module while the module itself handles all of the more intricate interfacing with gensim and the various things needed to train and retrain etc. I have some ideas for expanding this approach but it's not there yet as much of this module began as a general attempt to interact with gensim and get an idea of its uses.
+A "guiding principle" in making this module has been to ensure that one can use it without worrying about everything needed for interfacing with gensim. That is, I think in the end, it should be straightforward to use the iksimilarity module while the module itself handles all of the more intricate interfacing with gensim and the various things needed to train and retrain etc.
 
 ## An intro demo
 
 ### Instantiating a Word2Vec tool
-For the duration of this demo, **you should run Python in the iknow/modules/iknowpy/iknowpy/synonymdetection directory**. Since the repo contains a Word2Vec model, let's see what it looks like to get it up and running. First, we'll import the IKWord2VecTools class from the iksimilarity module, then create an object of the class. To do so, we have to pass in the name of the model that the tool will use for the sake of all calculations.
+If you haven't installed the package yet, do so now (see: Installation). Since the package contains an example Word2Vec model, let's see what it looks like to get it up and running. First, we'll import the IKWord2VecTools class from the iksimilarity module, then create an object of the class. To do so, we have to pass in the name of the model that the tool will use for the sake of all calculations.
 
-    >>> from iksimilarity import IKWord2VecTools as w2v
+    >>> from synonymdetection.iksimilarity import IKWord2VecTools as w2v
     >>> demo_tool = w2v(pmodel_name='w2v_example')
 
-Initially, my goal was to load a default model if the specified model wasn't found. Since I wasn't sure that would be the plan (default models), I removed that approach and now just throw an error when someone tries to instantiate an inexistent model. But, a default-model functionality is something to consider for the future.
+Initially, my goal was to load a default model if the specified model wasn't found. Since I wasn't sure that would be the plan (default models), I removed that approach and now just throw an error when someone tries to instantiate an inexistent model. But, a default-model functionality may be something to reconsider for the future.
 
 ### Retrieving similar words
 We can now use this tool to get information out of the model. One method to do so is most_similar(). Let's say we want to get the 5 most similar words to the word 'model':
@@ -70,13 +90,13 @@ We can check of any words, even if they are not in the model. In those cases, we
     -1
 
 ### Getting a dictionary of synonyms
-If we had some source text (a corpus or a string), we could get a dictionary containing the top similar words for each word in that text. We could also get the top synonyms for each iKnow entity in the source text passed in, but note that this won't be of much use here because (a) this model wasn't trained on an iKnow preprocessed corpus and (b) it is Word2Vec, so it cannot build a vector for an iKnow entity it has not explicitly seen before (and it will have seen none, other than singule-word entities). There are two different methods: synonym_dict_from_string() and synonym_dict_from_file(). The former is used below, and the source text is a free string passed in:
+To utilize this functionality with use_iknow_entities=True, it is necessary to have iknowpy installed. If we had some source text (a corpus or a string), we could get a dictionary containing the top similar words for each word in that text. We could also get the top synonyms for each iKnow entity in the source text passed in, but note that this won't be of much use here because (a) this model wasn't trained on an iKnow preprocessed corpus and (b) it is Word2Vec, so it cannot build a vector for an iKnow entity it has not explicitly seen before (and it will have seen none, other than single-word entities). There are two different methods: synonym_dict_from_string() and synonym_dict_from_file(). The former is used below, and the source text is a free string passed in:
  
     >>> source_text = 'This is an example sentence'
     >>> demo_tool.synonym_dict_from_string(source_text=source_text, use_iknow_entities=False)
     {'This': ['within', 'used', 'corpus.', 'GitHub!', 'has'], 'is': ['in', 'to', 'testing', 'The', 'corpus.'], 'an': ['The', 'large', 'will', 'to', 'real'], 'example': ['contained', 'used', 'has', 'vectors', 'testing']}
 
-Note that since sentence wasn't in the models vocabulary, it was not able to return synonyms for it. We can accomplish the same thing with the path to a file instead of a free string using the synonym_dict_from_file() method. Here, I use the example corpus this model was trained on, which you should also have in your corpora directory. The returned dictionary is too large to print here without making things too dirty, so I abbreviated it.
+Note that since 'sentence' wasn't in the models vocabulary, it was not able to return synonyms for it. We can accomplish the same thing with the path to a file instead of a free string using the synonym_dict_from_file() method. Here, I use the example corpus this model was trained on, which you should also have in your corpora directory. The returned dictionary is too large to print here without making things too dirty, so I abbreviated it.
 
     >>> source_text = 'corpora/examplecorpus.txt'
     >>> demo_tool.synonym_dict_from_file(source_text=source_text, use_iknow_entities=False)
@@ -132,4 +152,4 @@ For a final display, let's go back to the Word2Vec model. Recall that it couldn'
 
 This shows us that 'cowabunga' has been added to the vocabulary thanks to the retraining!
 
-There may be some updates to come while I fix/change some things in the module. Comments, advice, criticism, errors etc are all welcome, and you can feel free to message me on Teams about anything.
+There may be some updates to come while I fix/change some things in the module. Comments, advice, criticism, errors etc are all welcome, and you can feel free to reach out to me at michael.golden@intersystems.com
